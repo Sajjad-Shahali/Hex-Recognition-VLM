@@ -1,0 +1,20 @@
+torch==2.11.0
+numpy>=2.0
+pandas>=2.0
+pillow>=11.0
+PyYAML>=6.0
+fastapi>=0.110
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+matplotlib>=3.8
+pytest>=8.0
+
+# Note: torch is installed with a CUDA build to match the development GPU
+# (RTX 5070 Ti). CPU-only users on a clean clone should instead:
+#   1. Delete the "torch==2.11.0" line above (or comment it out)
+#   2. pip install -r requirements.txt
+#   3. pip install torch --index-url https://download.pytorch.org/whl/cpu
+# Installing the CPU index-url against the *whole* requirements file (an
+# earlier version of this note suggested that) fails, since packages like
+# fastapi/matplotlib aren't hosted on that index -- do the two-step above
+# instead. See README.md "Environment" section.
