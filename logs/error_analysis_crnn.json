@@ -1,0 +1,21 @@
+{
+  "arch": "crnn",
+  "split": "test",
+  "n_samples": 400,
+  "malformed_rate": 0.0,
+  "exact_match_by_digit_length": {
+    "1_digit": {
+      "accuracy": 0.9847328244274809,
+      "n_samples": 131
+    },
+    "2_digit": {
+      "accuracy": 0.9923664122137404,
+      "n_samples": 131
+    },
+    "3_digit": {
+      "accuracy": 0.9420289855072463,
+      "n_samples": 138
+    }
+  },
+  "n_failures": 11
+}

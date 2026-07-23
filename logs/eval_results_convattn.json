@@ -1,0 +1,16 @@
+{
+  "arch": "convattn",
+  "split": "test",
+  "n_samples": 400,
+  "hex_exact_match_accuracy": 0.9725,
+  "decimal_exact_match_accuracy": 0.9725,
+  "mean_char_accuracy": 0.993,
+  "parameter_count": 606738,
+  "checkpoint_size_mb": 2.367,
+  "mean_latency_ms": 1.0145,
+  "p50_latency_ms": 0.9968,
+  "p95_latency_ms": 1.113,
+  "max_latency_ms": 1.3249,
+  "latency_reps": 100,
+  "device": "cuda"
+}

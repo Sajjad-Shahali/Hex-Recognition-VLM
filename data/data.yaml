@@ -1,0 +1,26 @@
+# YOLO-style dataset spec for the hex-string character-detection task.
+#
+# Labeling strategy: one bounding box per rendered glyph (including the
+# literal '0' and 'x' of the 0x prefix), class id = index into `names`
+# below. Boxes are computed analytically from the synthetic renderer's own
+# glyph placement (exact, not annotated by hand) -- see
+# docs/system_design.md section 5 for why boxes are produced even though
+# the CTC recognizer trained in src/model.py does not consume them.
+#
+# Split strategy: 80/10/10 train/val/test by sample count. Each split's
+# images are independently rendered (no image file is ever duplicated
+# across splits), but the underlying hex *value* can repeat across splits
+# with a different rendering (font/size/rotation/noise) -- the full domain
+# is only 4096 possible values (0x0-0xfff), smaller than the training set,
+# so this is expected and appropriate: the task is closed-set recognition
+# over a small, enumerable output space (like MNIST's 10 digit classes),
+# not open-set generalization to unseen values. See docs/system_design.md
+# section 5 for the full discussion.
+
+path: .
+train: images/train
+val: images/val
+test: images/test
+
+nc: 17
+names: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'x']
