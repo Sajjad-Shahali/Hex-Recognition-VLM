@@ -3,8 +3,12 @@
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.11-EE4C2C?logo=pytorch&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
+![Uvicorn](https://img.shields.io/badge/ASGI-Uvicorn-2E3440?logo=gunicorn&logoColor=white)
 ![CUDA](https://img.shields.io/badge/CUDA-12.8-76B900?logo=nvidia&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-8%20passed-brightgreen)
+![Optuna](https://img.shields.io/badge/tuning-Optuna-0080FF?logo=optuna&logoColor=white)
+![pytest](https://img.shields.io/badge/tests-7%20passed-brightgreen?logo=pytest&logoColor=white)
+![Accuracy](https://img.shields.io/badge/test%20accuracy-96.50%25-success)
+![Params](https://img.shields.io/badge/parameters-606K-blue)
 
 A compact computer-vision system that recognizes a hexadecimal literal in an
 image and returns its decimal value.
