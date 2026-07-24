@@ -8,6 +8,7 @@ uvicorn[standard]>=0.30
 python-multipart>=0.0.9
 matplotlib>=3.8
 pytest>=8.0
+optuna>=3.6
 
 # Note: torch is installed with a CUDA build to match the development GPU
 # (RTX 5070 Ti). CPU-only users on a clean clone should instead:
