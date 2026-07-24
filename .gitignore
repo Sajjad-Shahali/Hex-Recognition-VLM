@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .venv/
 data_smoke/
+.pytest_cache/
