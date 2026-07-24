@@ -1,0 +1,52 @@
+arch=convattn norm=batch device=cuda params=606,738 train_samples=3000 val_samples=400 epochs=80 batch_size=64 lr=0.001 seed=46 patience=12 warmup_epochs=0
+epoch 001/80 | train_ctc_loss=2.3169 | val_exact_match_acc=0.0100 | lr=0.001000 | time=1.4s
+epoch 002/80 | train_ctc_loss=1.5813 | val_exact_match_acc=0.0175 | lr=0.000998 | time=1.0s
+epoch 003/80 | train_ctc_loss=1.4810 | val_exact_match_acc=0.0225 | lr=0.000997 | time=1.0s
+epoch 004/80 | train_ctc_loss=1.4325 | val_exact_match_acc=0.0225 | lr=0.000994 | time=1.1s
+epoch 005/80 | train_ctc_loss=1.4224 | val_exact_match_acc=0.0200 | lr=0.000990 | time=1.0s
+epoch 006/80 | train_ctc_loss=1.3582 | val_exact_match_acc=0.0100 | lr=0.000986 | time=1.0s
+epoch 007/80 | train_ctc_loss=1.2941 | val_exact_match_acc=0.0325 | lr=0.000981 | time=1.1s
+epoch 008/80 | train_ctc_loss=1.1485 | val_exact_match_acc=0.1075 | lr=0.000976 | time=1.0s
+epoch 009/80 | train_ctc_loss=0.9334 | val_exact_match_acc=0.1175 | lr=0.000969 | time=1.0s
+epoch 010/80 | train_ctc_loss=0.5335 | val_exact_match_acc=0.5225 | lr=0.000962 | time=1.0s
+epoch 011/80 | train_ctc_loss=0.2798 | val_exact_match_acc=0.6700 | lr=0.000954 | time=1.0s
+epoch 012/80 | train_ctc_loss=0.1603 | val_exact_match_acc=0.6500 | lr=0.000946 | time=1.0s
+epoch 013/80 | train_ctc_loss=0.0962 | val_exact_match_acc=0.8675 | lr=0.000936 | time=1.1s
+epoch 014/80 | train_ctc_loss=0.0609 | val_exact_match_acc=0.8625 | lr=0.000926 | time=1.1s
+epoch 015/80 | train_ctc_loss=0.0416 | val_exact_match_acc=0.9000 | lr=0.000916 | time=1.0s
+epoch 016/80 | train_ctc_loss=0.0388 | val_exact_match_acc=0.8800 | lr=0.000905 | time=1.1s
+epoch 017/80 | train_ctc_loss=0.0316 | val_exact_match_acc=0.8550 | lr=0.000893 | time=1.0s
+epoch 018/80 | train_ctc_loss=0.0262 | val_exact_match_acc=0.8775 | lr=0.000880 | time=1.0s
+epoch 019/80 | train_ctc_loss=0.0347 | val_exact_match_acc=0.8425 | lr=0.000867 | time=1.1s
+epoch 020/80 | train_ctc_loss=0.0253 | val_exact_match_acc=0.8700 | lr=0.000854 | time=1.1s
+epoch 021/80 | train_ctc_loss=0.0189 | val_exact_match_acc=0.9175 | lr=0.000839 | time=1.0s
+epoch 022/80 | train_ctc_loss=0.0141 | val_exact_match_acc=0.9100 | lr=0.000825 | time=1.1s
+epoch 023/80 | train_ctc_loss=0.0127 | val_exact_match_acc=0.9200 | lr=0.000810 | time=1.1s
+epoch 024/80 | train_ctc_loss=0.0113 | val_exact_match_acc=0.9000 | lr=0.000794 | time=1.1s
+epoch 025/80 | train_ctc_loss=0.0129 | val_exact_match_acc=0.8400 | lr=0.000778 | time=1.1s
+epoch 026/80 | train_ctc_loss=0.0116 | val_exact_match_acc=0.9200 | lr=0.000761 | time=1.1s
+epoch 027/80 | train_ctc_loss=0.0105 | val_exact_match_acc=0.8275 | lr=0.000744 | time=1.1s
+epoch 028/80 | train_ctc_loss=0.0076 | val_exact_match_acc=0.9050 | lr=0.000727 | time=1.1s
+epoch 029/80 | train_ctc_loss=0.0284 | val_exact_match_acc=0.6775 | lr=0.000709 | time=1.1s
+epoch 030/80 | train_ctc_loss=0.0350 | val_exact_match_acc=0.8225 | lr=0.000691 | time=1.1s
+epoch 031/80 | train_ctc_loss=0.0237 | val_exact_match_acc=0.8650 | lr=0.000673 | time=1.0s
+epoch 032/80 | train_ctc_loss=0.0180 | val_exact_match_acc=0.8875 | lr=0.000655 | time=1.0s
+epoch 033/80 | train_ctc_loss=0.0109 | val_exact_match_acc=0.9200 | lr=0.000636 | time=1.0s
+epoch 034/80 | train_ctc_loss=0.0071 | val_exact_match_acc=0.9225 | lr=0.000617 | time=1.1s
+epoch 035/80 | train_ctc_loss=0.0040 | val_exact_match_acc=0.9325 | lr=0.000598 | time=1.0s
+epoch 036/80 | train_ctc_loss=0.0033 | val_exact_match_acc=0.9525 | lr=0.000578 | time=1.0s
+epoch 037/80 | train_ctc_loss=0.0024 | val_exact_match_acc=0.9425 | lr=0.000559 | time=1.0s
+epoch 038/80 | train_ctc_loss=0.0021 | val_exact_match_acc=0.9350 | lr=0.000539 | time=1.0s
+epoch 039/80 | train_ctc_loss=0.0018 | val_exact_match_acc=0.9425 | lr=0.000520 | time=1.0s
+epoch 040/80 | train_ctc_loss=0.0015 | val_exact_match_acc=0.9475 | lr=0.000500 | time=1.1s
+epoch 041/80 | train_ctc_loss=0.0018 | val_exact_match_acc=0.9500 | lr=0.000480 | time=1.0s
+epoch 042/80 | train_ctc_loss=0.0011 | val_exact_match_acc=0.9475 | lr=0.000461 | time=1.0s
+epoch 043/80 | train_ctc_loss=0.0046 | val_exact_match_acc=0.9150 | lr=0.000441 | time=1.1s
+epoch 044/80 | train_ctc_loss=0.0058 | val_exact_match_acc=0.9075 | lr=0.000422 | time=1.0s
+epoch 045/80 | train_ctc_loss=0.0030 | val_exact_match_acc=0.9400 | lr=0.000402 | time=1.0s
+epoch 046/80 | train_ctc_loss=0.0020 | val_exact_match_acc=0.9375 | lr=0.000383 | time=1.0s
+epoch 047/80 | train_ctc_loss=0.0009 | val_exact_match_acc=0.9450 | lr=0.000364 | time=1.0s
+epoch 048/80 | train_ctc_loss=0.0010 | val_exact_match_acc=0.9425 | lr=0.000345 | time=1.0s
+early stopping at epoch 48: no val improvement for 12 epochs
+best_val_exact_match_acc=0.9525 saved_to=D:\internship\task\src\..\weights\model_convattn_seed46.pt
+stopped_early_at_epoch=48

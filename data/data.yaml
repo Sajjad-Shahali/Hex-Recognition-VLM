@@ -7,6 +7,11 @@
 # docs/system_design.md section 5 for why boxes are produced even though
 # the CTC recognizer trained in src/model.py does not consume them.
 #
+# Orientation augmentation: 30% of samples get an additional 90/180/270-
+# degree rotation on top of the usual +-8-degree jitter, so the model is
+# trained on genuinely upside-down and sideways text, not only near-upright
+# text. Canvas is square (128x128) specifically so this doesn't clip content.
+#
 # Split strategy: 80/10/10 train/val/test by sample count. Each split's
 # images are independently rendered (no image file is ever duplicated
 # across splits), but the underlying hex *value* can repeat across splits

@@ -1,0 +1,9 @@
+{
+  "split": "test",
+  "n_samples": 300,
+  "orientation_classifier_accuracy": 0.99,
+  "recognizer_alone_hex_accuracy": 0.06,
+  "pipeline_hex_accuracy": 0.8,
+  "pipeline_decimal_accuracy": 0.8,
+  "recognizer_arch": "convattn"
+}

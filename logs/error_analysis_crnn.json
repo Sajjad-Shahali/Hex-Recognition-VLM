@@ -5,17 +5,17 @@
   "malformed_rate": 0.0,
   "exact_match_by_digit_length": {
     "1_digit": {
-      "accuracy": 0.9847328244274809,
-      "n_samples": 131
+      "accuracy": 0.9928571428571429,
+      "n_samples": 140
     },
     "2_digit": {
-      "accuracy": 0.9923664122137404,
-      "n_samples": 131
+      "accuracy": 0.9555555555555556,
+      "n_samples": 135
     },
     "3_digit": {
-      "accuracy": 0.9420289855072463,
-      "n_samples": 138
+      "accuracy": 0.944,
+      "n_samples": 125
     }
   },
-  "n_failures": 11
+  "n_failures": 14
 }

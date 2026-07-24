@@ -1,0 +1,32 @@
+params=60,836 train_samples=2000 val_samples=300 epochs=30 batch_size=64 lr=0.001 seed=42
+epoch 001/30 | train_loss=1.2769 | val_acc=0.5100 | time=10.6s
+epoch 002/30 | train_loss=1.0307 | val_acc=0.5667 | time=1.0s
+epoch 003/30 | train_loss=0.8667 | val_acc=0.7500 | time=1.0s
+epoch 004/30 | train_loss=0.7487 | val_acc=0.8767 | time=1.0s
+epoch 005/30 | train_loss=0.6053 | val_acc=0.7900 | time=1.0s
+epoch 006/30 | train_loss=0.4818 | val_acc=0.9333 | time=1.0s
+epoch 007/30 | train_loss=0.3611 | val_acc=0.9633 | time=1.0s
+epoch 008/30 | train_loss=0.3031 | val_acc=0.9600 | time=1.0s
+epoch 009/30 | train_loss=0.2414 | val_acc=0.9300 | time=1.0s
+epoch 010/30 | train_loss=0.1850 | val_acc=0.9633 | time=1.0s
+epoch 011/30 | train_loss=0.1481 | val_acc=0.9000 | time=1.0s
+epoch 012/30 | train_loss=0.1232 | val_acc=0.9833 | time=1.0s
+epoch 013/30 | train_loss=0.1043 | val_acc=0.9500 | time=1.0s
+epoch 014/30 | train_loss=0.0980 | val_acc=0.9900 | time=1.0s
+epoch 015/30 | train_loss=0.0830 | val_acc=0.9833 | time=1.0s
+epoch 016/30 | train_loss=0.0691 | val_acc=0.9767 | time=1.0s
+epoch 017/30 | train_loss=0.0669 | val_acc=0.9567 | time=1.0s
+epoch 018/30 | train_loss=0.0575 | val_acc=0.9800 | time=1.0s
+epoch 019/30 | train_loss=0.0521 | val_acc=0.9867 | time=1.0s
+epoch 020/30 | train_loss=0.0516 | val_acc=0.9900 | time=1.0s
+epoch 021/30 | train_loss=0.0476 | val_acc=0.9633 | time=1.0s
+epoch 022/30 | train_loss=0.0446 | val_acc=0.9900 | time=1.0s
+epoch 023/30 | train_loss=0.0416 | val_acc=0.9767 | time=1.0s
+epoch 024/30 | train_loss=0.0393 | val_acc=0.9933 | time=1.0s
+epoch 025/30 | train_loss=0.0385 | val_acc=0.9933 | time=1.0s
+epoch 026/30 | train_loss=0.0396 | val_acc=0.9933 | time=1.0s
+epoch 027/30 | train_loss=0.0391 | val_acc=0.9933 | time=1.0s
+epoch 028/30 | train_loss=0.0370 | val_acc=0.9933 | time=1.0s
+epoch 029/30 | train_loss=0.0356 | val_acc=0.9933 | time=1.0s
+epoch 030/30 | train_loss=0.0381 | val_acc=0.9900 | time=1.0s
+best_val_acc=0.9933 saved_to=D:\internship\task\src\..\weights\rotation_classifier.pt

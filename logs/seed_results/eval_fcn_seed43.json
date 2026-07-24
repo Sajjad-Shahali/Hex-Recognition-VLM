@@ -1,0 +1,16 @@
+{
+  "arch": "fcn",
+  "split": "test",
+  "n_samples": 400,
+  "hex_exact_match_accuracy": 0.0175,
+  "decimal_exact_match_accuracy": 0.0175,
+  "mean_char_accuracy": 0.5399166666666667,
+  "parameter_count": 490386,
+  "checkpoint_size_mb": 1.892,
+  "mean_latency_ms": 0.7108,
+  "p50_latency_ms": 0.6943,
+  "p95_latency_ms": 0.8179,
+  "max_latency_ms": 0.9774,
+  "latency_reps": 100,
+  "device": "cuda"
+}

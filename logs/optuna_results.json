@@ -1,0 +1,131 @@
+{
+  "n_trials": 15,
+  "trial_epochs": 25,
+  "best_value": 0.9325,
+  "best_params": {
+    "lr": 0.0017607120827927618,
+    "batch_size": 32
+  },
+  "all_trials": [
+    {
+      "number": 0,
+      "value": 0.0325,
+      "params": {
+        "lr": 0.00100404040155443,
+        "batch_size": 64
+      }
+    },
+    {
+      "number": 1,
+      "value": 0.93,
+      "params": {
+        "lr": 0.00237822347443933,
+        "batch_size": 32
+      }
+    },
+    {
+      "number": 2,
+      "value": 0.02,
+      "params": {
+        "lr": 0.0006034353812756228,
+        "batch_size": 128
+      }
+    },
+    {
+      "number": 3,
+      "value": 0.03,
+      "params": {
+        "lr": 0.0003553296186125496,
+        "batch_size": 64
+      }
+    },
+    {
+      "number": 4,
+      "value": 0.0275,
+      "params": {
+        "lr": 0.0014014290768362202,
+        "batch_size": 64
+      }
+    },
+    {
+      "number": 5,
+      "value": 0.0075,
+      "params": {
+        "lr": 0.00015048074210515753,
+        "batch_size": 128
+      }
+    },
+    {
+      "number": 6,
+      "value": 0.03,
+      "params": {
+        "lr": 0.000522006955050949,
+        "batch_size": 32
+      }
+    },
+    {
+      "number": 7,
+      "value": 0.325,
+      "params": {
+        "lr": 0.0028683615124880323,
+        "batch_size": 128
+      }
+    },
+    {
+      "number": 8,
+      "value": 0.0225,
+      "params": {
+        "lr": 0.000437838599398438,
+        "batch_size": 128
+      }
+    },
+    {
+      "number": 9,
+      "value": 0.03,
+      "params": {
+        "lr": 0.0008789128098821152,
+        "batch_size": 64
+      }
+    },
+    {
+      "number": 10,
+      "value": 0.03,
+      "params": {
+        "lr": 0.0001912289904453061,
+        "batch_size": 32
+      }
+    },
+    {
+      "number": 11,
+      "value": 0.215,
+      "params": {
+        "lr": 0.002948365148214175,
+        "batch_size": 32
+      }
+    },
+    {
+      "number": 12,
+      "value": 0.03,
+      "params": {
+        "lr": 0.0028833742746131553,
+        "batch_size": 128
+      }
+    },
+    {
+      "number": 13,
+      "value": 0.9325,
+      "params": {
+        "lr": 0.0017607120827927618,
+        "batch_size": 32
+      }
+    },
+    {
+      "number": 14,
+      "value": 0.8925,
+      "params": {
+        "lr": 0.0016152976614971354,
+        "batch_size": 32
+      }
+    }
+  ]
+}
