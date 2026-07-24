@@ -1,26 +1,37 @@
 """Synthetic dataset generator for the hex-to-decimal recognition task.
 
 Renders images of hex literals like "0x1a4", with:
-  - font, size, position, and rotation jitter
+  - font, size, position, and small-angle rotation jitter
   - background/text color and pixel noise
-so the recognizer doesn't overfit to one font or a fixed layout (see
+so the recognizer doesn't overfit to one font or layout (see
 docs/system_design.md §5 for the rationale behind each knob).
+
+Canvas is common.IMG_WIDTH x IMG_HEIGHT (128x32) -- the recognizer's
+original, seed-stable shape. Coarse 90/180/270-degree orientation is NOT
+part of this dataset; it's handled entirely by a separate rotation
+classifier trained on its own square canvas (see generate_rotation_dataset.py
+and src/pipeline.py) after an earlier attempt to train the recognizer
+directly on rotated data caused a severe seed-dependent training collapse
+(docs/RESULTS.md "Multi-seed robustness").
 
 Outputs (all under --out-dir, default ./data):
   images/{train,val,test}/*.png
   labels/{train,val,test}/*.txt   (YOLO format: class cx cy w h, normalized)
   data.yaml                       (YOLO-style dataset spec)
   dataset.csv                     (image_name, hexadecimal_value, decimal_value)
+
+Also used as a library by generate_ood_dataset.py, which reuses render_sample
+with harsher parameters (wider rotation, blur, lower contrast, held-out fonts)
+to build an out-of-distribution robustness test set.
 """
 import argparse
 import csv
-import glob
 import math
 import os
 import random
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from common import (
     CHAR_TO_IDX,
@@ -39,9 +50,19 @@ FONT_CANDIDATES = [
     "comic.ttf", "calibri.ttf",
 ]
 
+# Fonts never used at training time -- reserved for the OOD robustness set
+# (generate_ood_dataset.py) so "unseen font" is a genuine held-out condition.
+OOD_FONT_CANDIDATES = [
+    "impact.ttf", "trebuc.ttf", "segoeui.ttf", "constan.ttf", "bahnschrift.ttf",
+    "corbel.ttf", "framd.ttf", "gadugi.ttf",
+]
 
-def discover_fonts():
-    fonts = [os.path.join(FONT_DIR, f) for f in FONT_CANDIDATES
+DEFAULT_ORIENTATIONS = [0, 90, 180, 270]
+
+
+def discover_fonts(candidates=None):
+    candidates = candidates if candidates is not None else FONT_CANDIDATES
+    fonts = [os.path.join(FONT_DIR, f) for f in candidates
              if os.path.isfile(os.path.join(FONT_DIR, f))]
     if not fonts:
         # Headless / non-Windows fallback: PIL's bundled default bitmap font.
@@ -59,7 +80,7 @@ def random_hex_string(rng: random.Random) -> str:
     return f"0x{value:x}", value
 
 
-def load_font(font_path, size, rng):
+def load_font(font_path, size):
     if font_path is None:
         return ImageFont.load_default()
     return ImageFont.truetype(font_path, size=size)
@@ -117,30 +138,104 @@ def add_pixel_noise(img: Image.Image, rng: random.Random, sigma_max=12.0) -> Ima
     return Image.fromarray(arr)
 
 
-def render_sample(rng: random.Random, fonts):
+def render_sample(
+    rng: random.Random,
+    fonts,
+    size_range=(14, 20),
+    rotation_jitter=8.0,
+    orientation_aug_prob=0.0,
+    orientations=None,
+    contrast_range=(0, 60, 200, 255),  # (fg_lo, fg_hi, bg_lo, bg_hi)
+    blur_prob=0.0,
+    blur_radius_range=(0.5, 1.2),
+    canvas_width=None,
+    canvas_height=None,
+    crop_safe_size=None,
+):
+    """Render one synthetic hex-literal sample.
+
+    canvas_width/canvas_height: default to common.IMG_WIDTH/IMG_HEIGHT (the
+    recognizer's 128x32 canvas). generate_rotation_dataset.py overrides
+    these to a square canvas (128x128) instead -- coarse 90/180/270-degree
+    orientation is only ever needed for training/evaluating the separate
+    rotation classifier, never the recognizer itself (see
+    docs/system_design.md section 2.2 for why the recognizer stays on a
+    stable, shallow, 128x32-native stem and orientation correction happens
+    as an upstream pre-processing step instead).
+
+    crop_safe_size: when set (generate_rotation_dataset.py passes
+    common.IMG_HEIGHT=32), constrains the safe-margin placement radius to
+    this size instead of the full canvas -- so that after src/pipeline.py
+    corrects orientation and center-crops the square canvas back down to
+    the recognizer's 128x32 shape, the text is guaranteed to still be
+    inside that crop window. Without this, position jitter that uses the
+    full 128-tall canvas could place text outside a 32-tall center crop.
+
+    orientation_aug_prob: probability of adding a coarse 90/180/270-degree
+    rotation on top of the small (+-rotation_jitter) jitter. 0.0 (default)
+    for the main recognition dataset; generate_rotation_dataset.py always
+    passes a nonzero value. Ground truth label is unchanged regardless of
+    orientation.
+
+    contrast_range=(fg_lo, fg_hi, bg_lo, bg_hi): intensity ranges for text
+    (fg) and background (bg) pixels. The OOD generator narrows this gap to
+    simulate lower-contrast real-world photos.
+    """
+    canvas_width = canvas_width if canvas_width is not None else IMG_WIDTH
+    canvas_height = canvas_height if canvas_height is not None else IMG_HEIGHT
+    orientations = orientations if orientations is not None else DEFAULT_ORIENTATIONS
     text, decimal_value = random_hex_string(rng)
 
-    bg = rng.randint(200, 255)
-    fg = rng.randint(0, 60)
-    img = Image.new("L", (IMG_WIDTH, IMG_HEIGHT), color=bg)
+    fg_lo, fg_hi, bg_lo, bg_hi = contrast_range
+    bg = rng.randint(bg_lo, bg_hi)
+    fg = rng.randint(fg_lo, fg_hi)
+    img = Image.new("L", (canvas_width, canvas_height), color=bg)
     draw = ImageDraw.Draw(img)
 
     font_path = rng.choice(fonts)
-    size = rng.randint(16, 24)
-    font = load_font(font_path, size, rng)
+    size = rng.randint(*size_range)
+    font = load_font(font_path, size)
 
-    text_w = draw.textlength(text, font=font)
-    max_x = max(2, int(IMG_WIDTH - text_w - 2))
-    origin_x = rng.randint(2, max_x) if max_x > 2 else 2
-    origin_y = rng.randint(2, max(2, IMG_HEIGHT - size - 4))
+    text_bbox = draw.textbbox((0, 0), text, font=font)
+    text_w = text_bbox[2] - text_bbox[0]
+    text_h = text_bbox[3] - text_bbox[1]
+
+    # Safe-margin placement: when orientation_aug_prob > 0, the text's
+    # bounding circle (half-diagonal) must stay within the canvas after
+    # *any* rotation (0/90/180/270 + jitter), so the jitter offset is
+    # constrained by how much room is left once that circle is centered on
+    # the canvas. For the main (orientation_aug_prob=0) dataset this is
+    # unnecessarily conservative -- only the +-rotation_jitter degrees ever
+    # gets applied -- so a simple bounded jitter is used instead, matching
+    # the original (pre-rotation-support) placement logic and giving back
+    # the full position diversity that logic had.
+    if orientation_aug_prob > 0:
+        half_diag = math.sqrt(text_w ** 2 + text_h ** 2) / 2
+        cx_img, cy_img = canvas_width / 2, canvas_height / 2
+        margin_dim = crop_safe_size if crop_safe_size is not None else min(canvas_width, canvas_height)
+        max_offset = max(0.0, margin_dim / 2 - half_diag - 2)
+        offset_x = rng.uniform(-max_offset, max_offset)
+        offset_y = rng.uniform(-max_offset, max_offset)
+        origin_x = cx_img + offset_x - text_w / 2 - text_bbox[0]
+        origin_y = cy_img + offset_y - text_h / 2 - text_bbox[1]
+    else:
+        max_x = max(2, canvas_width - text_w - 2)
+        origin_x = rng.uniform(2, max_x) - text_bbox[0]
+        origin_y = rng.uniform(2, max(2, canvas_height - text_h - 2)) - text_bbox[1]
 
     draw.text((origin_x, origin_y), text, font=font, fill=fg)
     char_boxes = char_boxes_for_text(draw, text, font, (origin_x, origin_y))
 
-    angle = rng.uniform(-8, 8)
-    cx, cy = IMG_WIDTH / 2, IMG_HEIGHT / 2
-    img = img.rotate(angle, center=(cx, cy), fillcolor=bg, resample=Image.BILINEAR)
-    char_boxes = [rotate_box(b, cx, cy, angle, IMG_WIDTH, IMG_HEIGHT) for b in char_boxes]
+    jitter_angle = rng.uniform(-rotation_jitter, rotation_jitter)
+    coarse_angle = rng.choice([a for a in orientations if a != 0]) if rng.random() < orientation_aug_prob else 0
+    total_angle = jitter_angle + coarse_angle
+
+    cx_img, cy_img = canvas_width / 2, canvas_height / 2
+    img = img.rotate(total_angle, center=(cx_img, cy_img), fillcolor=bg, resample=Image.BILINEAR)
+    char_boxes = [rotate_box(b, cx_img, cy_img, total_angle, canvas_width, canvas_height) for b in char_boxes]
+
+    if blur_prob > 0 and rng.random() < blur_prob:
+        img = img.filter(ImageFilter.GaussianBlur(radius=rng.uniform(*blur_radius_range)))
 
     img = add_pixel_noise(img, rng)
 
@@ -149,10 +244,10 @@ def render_sample(rng: random.Random, fonts):
         cls = CHAR_TO_IDX[ch]
         w = x1 - x0
         h = y1 - y0
-        cx_norm = (x0 + w / 2) / IMG_WIDTH
-        cy_norm = (y0 + h / 2) / IMG_HEIGHT
-        w_norm = w / IMG_WIDTH
-        h_norm = h / IMG_HEIGHT
+        cx_norm = (x0 + w / 2) / canvas_width
+        cy_norm = (y0 + h / 2) / canvas_height
+        w_norm = w / canvas_width
+        h_norm = h / canvas_height
         yolo_lines.append(f"{cls} {cx_norm:.6f} {cy_norm:.6f} {w_norm:.6f} {h_norm:.6f}")
 
     return img, text, decimal_value, yolo_lines
@@ -168,6 +263,11 @@ def write_data_yaml(out_dir):
 # glyph placement (exact, not annotated by hand) -- see
 # docs/system_design.md section 5 for why boxes are produced even though
 # the CTC recognizer trained in src/model.py does not consume them.
+#
+# Orientation augmentation: 30% of samples get an additional 90/180/270-
+# degree rotation on top of the usual +-8-degree jitter, so the model is
+# trained on genuinely upside-down and sideways text, not only near-upright
+# text. Canvas is square (128x128) specifically so this doesn't clip content.
 #
 # Split strategy: 80/10/10 train/val/test by sample count. Each split's
 # images are independently rendered (no image file is ever duplicated
@@ -191,14 +291,14 @@ names: {VOCAB}
         f.write(content)
 
 
-def generate_split(split_name, n_samples, out_dir, fonts, rng, csv_rows):
+def generate_split(split_name, n_samples, out_dir, fonts, rng, csv_rows, **render_kwargs):
     img_dir = os.path.join(out_dir, "images", split_name)
     lbl_dir = os.path.join(out_dir, "labels", split_name)
     os.makedirs(img_dir, exist_ok=True)
     os.makedirs(lbl_dir, exist_ok=True)
 
     for i in range(n_samples):
-        img, hex_text, decimal_value, yolo_lines = render_sample(rng, fonts)
+        img, hex_text, decimal_value, yolo_lines = render_sample(rng, fonts, **render_kwargs)
         name = f"{split_name}_{i:06d}"
         img.save(os.path.join(img_dir, f"{name}.png"))
         with open(os.path.join(lbl_dir, f"{name}.txt"), "w") as f:
@@ -213,6 +313,11 @@ def main():
     parser.add_argument("--n-val", type=int, default=400)
     parser.add_argument("--n-test", type=int, default=400)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--orientation-aug-prob", type=float, default=0.0,
+                         help="probability of an extra 90/180/270-degree rotation; "
+                              "0.0 (default) keeps the main recognition dataset upright "
+                              "(+-8-degree jitter only) -- see generate_rotation_dataset.py "
+                              "for the oriented dataset used by the rotation classifier")
     args = parser.parse_args()
 
     out_dir = os.path.abspath(args.out_dir)
@@ -221,9 +326,10 @@ def main():
     print(f"Using {len(fonts)} font(s): {[os.path.basename(f) if f else 'PIL default' for f in fonts]}")
 
     csv_rows = []
-    generate_split("train", args.n_train, out_dir, fonts, rng, csv_rows)
-    generate_split("val", args.n_val, out_dir, fonts, rng, csv_rows)
-    generate_split("test", args.n_test, out_dir, fonts, rng, csv_rows)
+    render_kwargs = {"orientation_aug_prob": args.orientation_aug_prob}
+    generate_split("train", args.n_train, out_dir, fonts, rng, csv_rows, **render_kwargs)
+    generate_split("val", args.n_val, out_dir, fonts, rng, csv_rows, **render_kwargs)
+    generate_split("test", args.n_test, out_dir, fonts, rng, csv_rows, **render_kwargs)
 
     with open(os.path.join(out_dir, "dataset.csv"), "w", newline="") as f:
         writer = csv.writer(f)

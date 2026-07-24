@@ -12,8 +12,24 @@ IDX_TO_CHAR = {i: c for i, c in enumerate(VOCAB)}
 BLANK_IDX = len(VOCAB)  # CTC blank token, one past the last real class
 NUM_CLASSES = len(VOCAB) + 1  # +1 for CTC blank
 
+# Recognizer's native canvas. A square 128x128 canvas was tried (to let
+# 90/270-degree rotation augmentation train directly into the recognizer)
+# but the deeper CNN stem it required (6 conv+pool blocks vs. 4) turned out
+# to be the actual cause of a ~40%-of-seeds CTC training collapse -- see
+# docs/RESULTS.md "Multi-seed robustness" and the old-vs-new-codebase
+# comparison referenced there. Reverted to the original, seed-stable 128x32
+# canvas; orientation robustness now lives entirely in a separate pipeline
+# stage (src/pipeline.py) that classifies+corrects orientation on its own
+# square canvas (ROTATION_CANVAS_SIZE below) and crops back down to this
+# shape before the recognizer ever sees the image.
 IMG_WIDTH = 128
 IMG_HEIGHT = 32
+
+# Square canvas used only by the rotation classifier (src/rotation_model.py)
+# and its dataset (generate_rotation_dataset.py) -- deliberately decoupled
+# from IMG_WIDTH/IMG_HEIGHT above so the recognizer's stem never has to
+# change shape to support 90/270-degree orientation coverage.
+ROTATION_CANVAS_SIZE = 128
 
 MIN_HEX_DIGITS = 1
 MAX_HEX_DIGITS = 3

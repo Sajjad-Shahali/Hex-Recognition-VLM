@@ -11,7 +11,13 @@ this is the ablation referenced in docs/system_design.md section 2:
                   Hernandez Diaz et al. 2021 found competitive with/better
                   than recurrent encoders for line recognition)
 
-Input:  (B, 1, 32, 128) grayscale image
+Input:  (B, 1, 32, 128) grayscale image. A square 128x128 canvas (needing a
+        deeper, 6-block stem) was tried to support 90-degree orientation
+        augmentation directly, but that deeper stem turned out to cause a
+        ~40%-of-seeds CTC training collapse -- see docs/RESULTS.md
+        "Multi-seed robustness". Reverted to this shallower, seed-stable
+        4-block stem; orientation robustness now lives entirely in a
+        separate pipeline stage (src/pipeline.py) on its own square canvas.
 Output: (T, B, NUM_CLASSES) log-probabilities over the vocabulary + CTC
         blank, T=32 timesteps (one per pixel-column after downsampling),
         ready to feed straight into nn.CTCLoss.
@@ -24,11 +30,33 @@ import torch.nn as nn
 from common import NUM_CLASSES
 
 
-def _cnn_stem():
+def _norm2d(norm: str, channels: int) -> nn.Module:
+    """BatchNorm (default, original) or GroupNorm (opt-in, --norm group in
+    train.py). GroupNorm's statistics don't depend on batch composition, so
+    it doesn't have BatchNorm's known instability in the first few steps of
+    training from a fresh random init -- a plausible contributor to the
+    seed-dependent CTC collapse documented in docs/RESULTS.md section 2."""
+    if norm == "batch":
+        return nn.BatchNorm2d(channels)
+    if norm == "group":
+        return nn.GroupNorm(num_groups=min(32, channels), num_channels=channels)
+    raise ValueError(f"Unknown norm {norm!r}, expected 'batch' or 'group'")
+
+
+def _norm1d(norm: str, channels: int) -> nn.Module:
+    if norm == "batch":
+        return nn.BatchNorm1d(channels)
+    if norm == "group":
+        return nn.GroupNorm(num_groups=min(32, channels), num_channels=channels)
+    raise ValueError(f"Unknown norm {norm!r}, expected 'batch' or 'group'")
+
+
+def _cnn_stem(norm: str = "batch"):
     """Shared feature extractor: (B, 1, 32, 128) -> (B, 128, 1, 32).
     Identical across all three architectures so any accuracy/latency
     difference between them is attributable to the sequence-modeling head,
-    not to different visual features.
+    not to different visual features. The shallow, 4-block version -- see
+    module docstring for why this replaced a deeper 6-block variant.
     """
     return nn.Sequential(
         # (1, 32, 128) -> (32, 16, 64)
@@ -43,19 +71,19 @@ def _cnn_stem():
 
         # (64, 8, 32) -> (128, 4, 32) -- pool height only, keep width as the sequence axis
         nn.Conv2d(64, 128, kernel_size=3, padding=1),
-        nn.BatchNorm2d(128),
+        _norm2d(norm, 128),
         nn.ReLU(inplace=True),
         nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),
 
         # (128, 4, 32) -> (128, 2, 32)
         nn.Conv2d(128, 128, kernel_size=3, padding=1),
-        nn.BatchNorm2d(128),
+        _norm2d(norm, 128),
         nn.ReLU(inplace=True),
         nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),
 
         # (128, 2, 32) -> (128, 1, 32) -- collapse height to 1
         nn.Conv2d(128, 128, kernel_size=(2, 3), padding=(0, 1)),
-        nn.BatchNorm2d(128),
+        _norm2d(norm, 128),
         nn.ReLU(inplace=True),
     )
 
@@ -63,9 +91,9 @@ def _cnn_stem():
 class HexCRNN(nn.Module):
     """CNN + BiGRU + CTC -- recurrent baseline."""
 
-    def __init__(self, num_classes: int = NUM_CLASSES, rnn_hidden: int = 128):
+    def __init__(self, num_classes: int = NUM_CLASSES, rnn_hidden: int = 128, norm: str = "batch"):
         super().__init__()
-        self.cnn = _cnn_stem()
+        self.cnn = _cnn_stem(norm=norm)
         self.rnn = nn.GRU(
             input_size=128, hidden_size=rnn_hidden, num_layers=1,
             batch_first=True, bidirectional=True,
@@ -89,18 +117,18 @@ class HexFCN(nn.Module):
     sequence axis at both train and inference time, unlike the BiGRU.
     """
 
-    def __init__(self, num_classes: int = NUM_CLASSES, hidden: int = 128):
+    def __init__(self, num_classes: int = NUM_CLASSES, hidden: int = 128, norm: str = "batch"):
         super().__init__()
-        self.cnn = _cnn_stem()
+        self.cnn = _cnn_stem(norm=norm)
         self.temporal = nn.Sequential(
             nn.Conv1d(128, hidden, kernel_size=3, padding=1, dilation=1),
-            nn.BatchNorm1d(hidden),
+            _norm1d(norm, hidden),
             nn.ReLU(inplace=True),
             nn.Conv1d(hidden, hidden, kernel_size=3, padding=2, dilation=2),
-            nn.BatchNorm1d(hidden),
+            _norm1d(norm, hidden),
             nn.ReLU(inplace=True),
             nn.Conv1d(hidden, hidden, kernel_size=3, padding=4, dilation=4),
-            nn.BatchNorm1d(hidden),
+            _norm1d(norm, hidden),
             nn.ReLU(inplace=True),
         )
         self.classifier = nn.Conv1d(hidden, num_classes, kernel_size=1)
@@ -137,9 +165,9 @@ class HexConvAttn(nn.Module):
     ends up spatially far from where it "should" be).
     """
 
-    def __init__(self, num_classes: int = NUM_CLASSES, d_model: int = 128, nhead: int = 4):
+    def __init__(self, num_classes: int = NUM_CLASSES, d_model: int = 128, nhead: int = 4, norm: str = "batch"):
         super().__init__()
-        self.cnn = _cnn_stem()
+        self.cnn = _cnn_stem(norm=norm)
         self.pos_encoding = _PositionalEncoding(d_model)
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model, nhead=nhead, dim_feedforward=256,
@@ -174,7 +202,7 @@ def count_parameters(model: nn.Module) -> int:
 
 
 if __name__ == "__main__":
-    dummy = torch.randn(4, 1, 32, 128)
+    dummy = torch.randn(4, 1, 128, 128)
     for name in MODEL_REGISTRY:
         model = get_model(name)
         out = model(dummy)

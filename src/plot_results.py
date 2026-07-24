@@ -108,7 +108,8 @@ def plot_val_acc_comparison():
     ax.set_xlabel("epoch")
     ax.set_ylabel("val exact-match accuracy")
     ax.set_ylim(0, 1.05)
-    ax.set_title("Validation accuracy by architecture (same data, same epoch budget)")
+    ax.set_title("Validation accuracy by architecture -- seed 42 only, NOT averaged\n"
+                 "(see multi_seed_accuracy.png / per_seed_accuracy_lines.png for the 5-seed picture)")
     ax.legend()
     fig.tight_layout()
     os.makedirs(OUT_DIR, exist_ok=True)

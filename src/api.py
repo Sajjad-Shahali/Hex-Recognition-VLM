@@ -70,7 +70,7 @@ def load_model():
 
     checkpoint = torch.load(MODEL_PATH, map_location=_device)
     _arch = checkpoint.get("arch", "crnn")
-    _model = get_model(_arch).to(_device)
+    _model = get_model(_arch, norm=checkpoint.get("norm", "batch")).to(_device)
     _model.load_state_dict(checkpoint["model_state_dict"])
     _model.eval()
     _n_params = count_parameters(_model)

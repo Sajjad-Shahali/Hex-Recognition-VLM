@@ -40,7 +40,7 @@ def main():
 
     checkpoint = torch.load(args.checkpoint, map_location=device)
     arch = args.arch or checkpoint.get("arch", "crnn")
-    model = get_model(arch).to(device)
+    model = get_model(arch, norm=checkpoint.get("norm", "batch")).to(device)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
 
@@ -111,20 +111,47 @@ def main():
     plots_dir = os.path.join(BASE, "logs", "plots")
     os.makedirs(plots_dir, exist_ok=True)
 
-    fig, ax = plt.subplots(figsize=(7, 6))
-    im = ax.imshow(confusion, cmap="Blues")
+    # Diagonal (correct predictions) dominates by 1-2 orders of magnitude at
+    # this sample size, which swamps the color scale and makes actual
+    # confusions invisible. Mask the diagonal out of the color scale (shown
+    # as plain white with an "OK" mark) so only real off-diagonal mix-ups
+    # get color, and annotate every nonzero off-diagonal cell with its count
+    # -- there are only a handful across the whole test set, so this stays
+    # readable rather than a wall of tiny numbers.
+    display_confusion = confusion.copy().astype(float)
+    off_diagonal_max = 0
+    for i in range(len(VOCAB)):
+        off_diagonal_max = max(off_diagonal_max, confusion[i].sum() - confusion[i, i])
+        display_confusion[i, i] = np.nan
+
+    fig, ax = plt.subplots(figsize=(7.5, 6.5))
+    cmap = plt.cm.Reds.copy()
+    cmap.set_bad(color="white")
+    im = ax.imshow(display_confusion, cmap=cmap, vmin=0)
     ax.set_xticks(range(len(VOCAB)))
-    ax.set_xticklabels(VOCAB, fontsize=8)
+    ax.set_xticklabels(VOCAB, fontsize=9)
     ax.set_yticks(range(len(VOCAB)))
-    ax.set_yticklabels(VOCAB, fontsize=8)
+    ax.set_yticklabels(VOCAB, fontsize=9)
     ax.set_xlabel("predicted character")
     ax.set_ylabel("ground-truth character")
-    ax.set_title(f"[{arch}] Character confusion matrix ({args.split}, position-aligned approx.)")
-    fig.colorbar(im, ax=ax, fraction=0.046)
+    ax.set_title(f"[{arch}] Character confusions only ({args.split}, n={total})\n"
+                 f"diagonal (correct) masked white -- only mistakes are colored")
+
+    n_confusions = 0
+    for i in range(len(VOCAB)):
+        for j in range(len(VOCAB)):
+            if i != j and confusion[i, j] > 0:
+                ax.text(j, i, str(int(confusion[i, j])), ha="center", va="center",
+                        fontsize=9, color="black", fontweight="bold")
+                n_confusions += 1
+            elif i == j:
+                ax.text(j, i, "•", ha="center", va="center", fontsize=7, color="lightgray")
+
+    fig.colorbar(im, ax=ax, fraction=0.046, label="confusion count")
     fig.tight_layout()
     cm_path = os.path.join(plots_dir, f"confusion_matrix_{arch}.png")
     fig.savefig(cm_path, dpi=150)
-    print(f"saved {cm_path}")
+    print(f"saved {cm_path} ({n_confusions} distinct off-diagonal confusion types)")
 
     if failures:
         sample = failures[: args.max_failure_examples]

@@ -88,7 +88,7 @@ def main():
     arch = args.arch or checkpoint.get("arch", "crnn")
     if args.out_json is None:
         args.out_json = os.path.join(os.path.dirname(__file__), "..", "logs", f"eval_results_{arch}.json")
-    model = get_model(arch).to(device)
+    model = get_model(arch, norm=checkpoint.get("norm", "batch")).to(device)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
 
